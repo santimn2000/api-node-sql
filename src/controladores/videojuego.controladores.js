@@ -10,7 +10,7 @@ const getVideojuegos= async (req,res) =>{
 
     try{
         const connection = await getConnection();
-        const result = await connection.query("SELECT id,nombre,categoria,multijugador,precio,desarrolladora,url_img FROM videojuegos")
+        const result = await connection.query("SELECT id,nombre,categoria,multijugador,precio,desarrolladora,img_url,fecha_creacion FROM juegos")
 
         res.json(result)
 
@@ -30,7 +30,7 @@ const getVideojuegoPorId= async (req,res) =>{
         const {id} = req.params
 
         const connection = await getConnection();
-        const result = await connection.query("SELECT id,nombre,categoria,multijugador,precio,desarrolladora, url_img FROM videojuegos WHERE id = ?", id)
+        const result = await connection.query("SELECT id,nombre,categoria,multijugador,precio,desarrolladora, img_url, fecha_creacion FROM juegos WHERE id = ?", id)
 
         res.json(result)
 
@@ -61,12 +61,13 @@ const addVideojuego = async (req, res) => {
 
         const videojuego = {
             nombre, categoria, multijugador, precio, desarrolladora,
-            url_img: originalname, // Si no se proporciona un archivo, se establecerá como null
-            blob_img: path ? fs.readFileSync(path) : null // Si no se proporciona un archivo, se establecerá como null
+            img_url: originalname, // Si no se proporciona un archivo, se establecerá como null
+            img_blob: path ? fs.readFileSync(path) : null, // Si no se proporciona un archivo, se establecerá como null
+            fecha_creacion: new Date().toISOString().slice(0,10)
         };
 
         // Inserta el videojuego en la base de datos
-        const result = await connection.query("INSERT INTO videojuegos SET ?", videojuego);
+        const result = await connection.query("INSERT INTO juegos SET ?", videojuego);
 
         // Si se proporciona un archivo, eliminar el archivo temporal después de almacenarlo en la base de datos
         if (path) {
@@ -86,7 +87,7 @@ const deleteVideojuegoPorId= async (req,res) =>{
         const {id} = req.params
 
         const connection = await getConnection();
-        const result = await connection.query("DELETE FROM videojuegos WHERE id = ?", id)
+        const result = await connection.query("DELETE FROM juegos WHERE id = ?", id)
 
         res.json(result)
 
@@ -122,7 +123,7 @@ const updateVideojuegoPorId = async (req, res) => {
         }
 
         // Construir la consulta SQL dinámicamente utilizando los campos a actualizar
-        const updateQuery = "UPDATE videojuegos SET ? WHERE id = ?";
+        const updateQuery = "UPDATE juegos SET ? WHERE id = ?";
         const connection = await getConnection();
         const result = await connection.query(updateQuery, [camposActualizables, id]);
 
@@ -147,7 +148,7 @@ const sortVideojuegos = async (req, res) => {
             return res.status(400).json({ message: "La opción de ordenación no es válida" });
         }
 
-        const query = `SELECT id, nombre, categoria, multijugador, precio, desarrolladora, url_img FROM videojuegos ${orderByClause}`;
+        const query = `SELECT id, nombre, categoria, multijugador, precio, desarrolladora, img_url, fecha_creacion FROM juegos ${orderByClause}`;
         const result = await connection.query(query);
 
         res.json(result);
@@ -164,7 +165,7 @@ const filtrarPorDesarrolladora = async(req, res) => {
         const connection = await getConnection();
 
         // Consulta SQL para filtrar los videojuegos por desarrolladora
-        const query = `SELECT id,nombre,categoria,multijugador,precio,desarrolladora, url_img FROM videojuegos WHERE LOWER(desarrolladora) = LOWER(?)`;
+        const query = `SELECT id,nombre,categoria,multijugador,precio,desarrolladora, img_url, fecha_creacion FROM juegos WHERE LOWER(desarrolladora) = LOWER(?)`;
         const videojuegos = await connection.query(query, [cad]);
 
         res.json(videojuegos);
